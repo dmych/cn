@@ -24,3 +24,12 @@ Shortcuts:
 * `Ctrl+O` — toggle orientation to vertical/horizontal
 * `Ctrl+Delete` — delete current note (if any)
 * `Tab` — jump through search/title bar, notes list and text area
+* `Ctrl+Q` — quit
+
+### Syncing with Dropbox
+
+*Coffee Notes* keeps all notes as a text files in a separate directory (`~/Coffee Notes` by default), you can just move this directory with its contents to your Dropbox directory — create `~/cn.conf` file and put there the following line:
+
+    WorkDir=~/Dropbox/path/to/your/notes
+
+Insead, you can create symlink: `ln -s ~/Dropbox/path/to/your/notes ~/Coffee\ Notes`

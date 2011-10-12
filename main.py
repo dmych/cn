@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import uic
@@ -6,7 +7,7 @@ import os
 from utils import SimpleConfig
 from notes import Notes
 
-VERSION = '0.1'
+VERSION = '0.2'
 CODE_NAME = 'Beans'
 
 class CallbackThread(QThread):
@@ -156,7 +157,7 @@ class MainWindow(QMainWindow):
     def showAboutBox(self):
         QMessageBox.about(self, "About",
                           "<h2>Coffee Notes</h2>" +
-                          """<p>Version %s %s</p>
+                          """<p>Version &laquo;%s&raquo; %s</p>
 <p>Quick crossplatform notepad inspired by Notational Velocity</p>
 <p>&copy; Dmitri Brechalov, 2011</p>""" % (CODE_NAME, VERSION))
 
