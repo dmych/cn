@@ -13,9 +13,9 @@ This app is written in **Python 2.6** and uses **PyQt4**.
 
 ### User Guide
 
-Start typing in the search/title bar to find a note or set the note's title, then hit `Enter` to open/create note.
+Start typing in the search/title bar to find a note or set a new note's title, then hit `Enter` to open/create note.
 
-Everything you type will be saved imnediately. No need to click "Save" button.
+Everything you type will be saved immediately. No need to click "Save" button.
 
 Shortcuts:
 
