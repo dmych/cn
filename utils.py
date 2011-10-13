@@ -6,7 +6,7 @@ def getProgramPath():
     pname = sys.argv[0]
     if os.path.islink(pname):
         pname = os.readlink(pname)
-    return os.path.split(pname)[0]
+    return os.path.abspath(os.path.dirname(pname))
 
 def openConfig(fname, mode):
     '''Return config file object'''

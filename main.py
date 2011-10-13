@@ -4,11 +4,11 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import uic
 import os
-from utils import SimpleConfig
+from utils import *
 from notes import Notes
 
-VERSION = '0.2'
-CODE_NAME = 'Beans'
+VERSION = '0.3'
+CODE_NAME = 'Espresso'
 
 class CallbackThread(QThread):
     '''Execute callback once at 5 secs
@@ -24,8 +24,10 @@ class CallbackThread(QThread):
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
 	QMainWindow.__init__(self)
+	self._ppath = getProgramPath()
+	print self._ppath
 	self.config = SimpleConfig('~/.cn.conf')
-	uic.loadUi("main.ui", self)
+	uic.loadUi(os.path.join(self._ppath, "main.ui"), self)
 	self.connect(self.action_Exit, SIGNAL("triggered()"),
 		     self.quit)
 	self.connect(self.action_About, SIGNAL("triggered()"),
@@ -157,9 +159,9 @@ class MainWindow(QMainWindow):
     def showAboutBox(self):
         QMessageBox.about(self, "About",
                           "<h2>Coffee Notes</h2>" +
-                          """<p>Version &laquo;%s&raquo; %s</p>
-<p>Quick crossplatform notepad inspired by Notational Velocity</p>
-<p>&copy; Dmitri Brechalov, 2011</p>""" % (CODE_NAME, VERSION))
+                          """<h4>Version &laquo;%s&raquo; %s</h4>
+<p>&copy; Dmitri Brechalov, 2011</p>
+<p>Quick crossplatform notepad inspired by Notational Velocity</p>""" % (CODE_NAME, VERSION))
 
 
     def changeSplitterOrientation(self):

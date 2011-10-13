@@ -1,11 +1,11 @@
-Coffee Notes ver. 0.1 (Beans)
------------------------------
+Coffee Notes
+------------
 
 ### About
 
 Mac users have *Notational Velocity*, Linux users have nothing. **Coffee Notes** is crossplatform application inspired by *Notational Velocity*.
 
-This is an initial release, which I sketched drinking coffee in the coffee house.
+Initial release was sketched by me while I was drinking coffee in the coffee house.
 
 ### Requirements
 
