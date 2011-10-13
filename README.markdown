@@ -3,7 +3,7 @@ Coffee Notes
 
 ### About
 
-Mac users have *Notational Velocity*, Linux users have nothing. **Coffee Notes** is crossplatform application inspired by *Notational Velocity*.
+![](https://github.com/dmych/cn/raw/master/icon.png) Mac users have *Notational Velocity*, Linux users have nothing. **Coffee Notes** is crossplatform application inspired by *Notational Velocity*.
 
 Initial release was sketched by me while I was drinking coffee in the coffee house.
 
