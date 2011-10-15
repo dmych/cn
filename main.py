@@ -189,8 +189,8 @@ class MainWindow(QMainWindow):
 	    
     def showAboutBox(self):
         QMessageBox.about(self, "About",
-                          "<h2>%s</h2>" +
-                          """<h4>Version &laquo;%s&raquo; %s</h4>
+                          """<h2>%s</h2>
+<h4>Version &laquo;%s&raquo; %s</h4>
 <p>&copy; Dmitri Brechalov, 2011</p>
 <p>Quick crossplatform notepad inspired by Notational Velocity</p>""" % (PROG_NAME, CODE_NAME, VERSION))
 
