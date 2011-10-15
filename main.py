@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
 	#### stantard shortcuts
 	self.connect(self.searchEdit, SIGNAL("returnPressed ()"), self.openNote)
 	shCL = QShortcut(QKeySequence("Ctrl+L"), self)
-	shCL.connect(shCL, SIGNAL("activated()"), self.searchEdit.setFocus)
+	shCL.connect(shCL, SIGNAL("activated()"), self.toggleFocus)
 	shEsc = QShortcut(QKeySequence("Esc"), self)
 	shEsc.connect(shEsc, SIGNAL("activated()"), self.clearSearch)
 	shCDel = QShortcut(QKeySequence("Ctrl+Delete"), self)
@@ -76,11 +76,11 @@ class MainWindow(QMainWindow):
 	except:
 	    ls = self.noteList.font().pointSize()
 	ef = self.config.readStr('EditFont', dft)
-#	try:
-	(ef, es) = ef.split(',', 1)
-	es = int(es.strip())
-#	except:
-#	    es = self.noteList.font().pointSize()
+	try:
+	    (ef, es) = ef.split(',', 1)
+	    es = int(es.strip())
+	except:
+	    es = self.noteList.font().pointSize()
 	self.noteList.setFont(QFont(lf, ls))
 	self.searchEdit.setFont(QFont(lf, ls))
 	self.noteEditor.setCurrentFont(QFont(ef, es))
@@ -98,6 +98,12 @@ class MainWindow(QMainWindow):
     def clearSearch(self):
 	self.searchEdit.clear()
 	self.searchEdit.setFocus()
+
+    def toggleFocus(self):
+	if self.searchEdit.hasFocus():
+	    self.noteEditor.setFocus()
+	else:
+	    self.searchEdit.setFocus()
 
     def reloadIndex(self):
 	print 'RELOADING INDEX...'
