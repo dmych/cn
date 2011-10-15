@@ -1,3 +1,4 @@
+<!-- -*- mode: markdown -*- -->
 Coffee Notes
 ------------
 
@@ -5,7 +6,7 @@ Coffee Notes
 
 ![](https://github.com/dmych/cn/raw/master/icon.png)
 
-Mac users have *Notational Velocity*, Linux users have nothing. **Coffee Notes** is crossplatform application inspired by *Notational Velocity*.
+Mac users have *Notational Velocity*, Linux users actually have nothing similar. **Coffee Notes** is crossplatform application inspired by *Notational Velocity*.
 
 Initial release was sketched by me while I was drinking coffee in the coffee house.
 
@@ -19,7 +20,7 @@ Start typing in the search/title bar to find a note or set a new note's title, t
 
 Everything you type will be saved immediately. No need to click "Save" button.
 
-Shortcuts:
+#### Shortcuts
 
 * `Ctrl+L` — switch to search/title bar
 * `Esc` — clear search/title bar
@@ -27,6 +28,14 @@ Shortcuts:
 * `Ctrl+Delete` — delete current note (if any)
 * `Tab` — jump through search/title bar, notes list and text area
 * `Ctrl+Q` — quit
+
+#### Configuration File
+
+Config file should be located in your home directory: `~/.cn.conf`. Here is a sample file:
+
+    WorkDir=~/Dropbox/path/to/your/notes
+    EditFont=Georgia, 14
+    ListFont=Ubuntu, 12
 
 ### Syncing with Dropbox
 

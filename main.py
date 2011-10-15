@@ -61,6 +61,29 @@ class MainWindow(QMainWindow):
 	shCO = QShortcut(QKeySequence("Ctrl+O"), self)
 	shCO.connect(shCO, SIGNAL("activated()"), self.changeSplitterOrientation)
 
+	self.setup()
+
+    def setup(self):
+	'''set up fonts etc
+	'''
+	dft = '%s, %s' % (unicode(self.noteList.font().family()), self.noteList.font().pointSize())
+	print 'DEFAULT FONT:', dft
+	lf = self.config.readStr('ListFont', dft)
+	try:
+	    (lf, ls) = lf.split(',', 1)
+	    ls = int(ls.strip())
+	except:
+	    ls = self.noteList.font().pointSize()
+	ef = self.config.readStr('EditFont', dft)
+#	try:
+	(ef, es) = ef.split(',', 1)
+	es = int(es.strip())
+#	except:
+#	    es = self.noteList.font().pointSize()
+	self.noteList.setFont(QFont(lf, ls))
+	self.searchEdit.setFont(QFont(lf, ls))
+	self.noteEditor.setCurrentFont(QFont(ef, es))
+
     def quit(self):
 	self.autosave()
 	qApp.quit()
@@ -108,6 +131,7 @@ class MainWindow(QMainWindow):
 	self.noteEditor.setPlainText(self._readText())
 	self.filterNotes('')
 	self.noteEditor.setFocus()
+	self.changed = False
 	#self.notes.indexChanged.emit()
 
     def selectNote(self):
@@ -171,3 +195,4 @@ class MainWindow(QMainWindow):
 	else:
 	    orientation = Qt.Horizontal
 	self.splitter.setOrientation(orientation)
+

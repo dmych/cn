@@ -62,11 +62,7 @@
         <enum>QAbstractItemView::SelectRows</enum>
        </property>
       </widget>
-      <widget class="QPlainTextEdit" name="noteEditor">
-       <property name="tabChangesFocus">
-        <bool>true</bool>
-       </property>
-      </widget>
+      <widget class="QTextEdit" name="noteEditor"/>
      </widget>
     </item>
    </layout>
@@ -84,8 +80,6 @@
     <property name="title">
      <string>&amp;?</string>
     </property>
-    <addaction name="action_Directory"/>
-    <addaction name="action_Options"/>
     <addaction name="separator"/>
     <addaction name="action_About"/>
     <addaction name="separator"/>
@@ -94,16 +88,6 @@
    <addaction name="menu_File"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="action_Directory">
-   <property name="text">
-    <string>&amp;Directory</string>
-   </property>
-  </action>
-  <action name="action_Options">
-   <property name="text">
-    <string>&amp;Options</string>
-   </property>
-  </action>
   <action name="action_About">
    <property name="text">
     <string>&amp;About</string>
