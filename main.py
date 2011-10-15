@@ -8,19 +8,20 @@ from utils import *
 from notes import Notes
 
 PROG_NAME = 'Coffee Notes'
-VERSION = '0.4'
+VERSION = '0.5'
 CODE_NAME = 'Espresso'
 
 class CallbackThread(QThread):
     '''Execute callback once at 5 secs
     '''
-    def __init__(self, callback, parent=None):
+    def __init__(self, callback, sec=5, parent=None):
 	QThread.__init__(self, parent)
 	self.callback = callback
+	self.sec = sec
     def run(self):
 	while True:
 	    self.callback()
-	    self.sleep(5)
+	    self.sleep(self.sec)
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -48,7 +49,7 @@ class MainWindow(QMainWindow):
 	self.connect(self.noteEditor, SIGNAL("textChanged()"), self.textChanged)
 	self.connect(self.searchEdit, SIGNAL("textChanged(const QString&)"),
 		     self.filterNotes)
-	self.autosaveThread = CallbackThread(self.autosave)
+	self.autosaveThread = CallbackThread(self.autosave, self.config.readInt('Autosave', 5))
 	self.autosaveThread.start(QThread.NormalPriority)
 
 	#### stantard shortcuts
