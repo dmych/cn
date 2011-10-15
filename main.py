@@ -7,7 +7,8 @@ import os
 from utils import *
 from notes import Notes
 
-VERSION = '0.3'
+PROG_NAME = 'Coffee Notes'
+VERSION = '0.4'
 CODE_NAME = 'Espresso'
 
 class CallbackThread(QThread):
@@ -29,7 +30,7 @@ class MainWindow(QMainWindow):
 	self.config = SimpleConfig('~/.cn.conf')
 	uic.loadUi(os.path.join(self._ppath, "main.ui"), self)
 	self.connect(self.action_Exit, SIGNAL("triggered()"),
-		     self.quit)
+		     self.close)
 	self.connect(self.action_About, SIGNAL("triggered()"),
 		     self.showAboutBox)
 	self.workDir = os.path.expanduser(self.config.readStr('WorkDir', '~/CoffeeNotes'))
@@ -83,10 +84,16 @@ class MainWindow(QMainWindow):
 	self.noteList.setFont(QFont(lf, ls))
 	self.searchEdit.setFont(QFont(lf, ls))
 	self.noteEditor.setCurrentFont(QFont(ef, es))
+	self.restoreSettings()
 
     def quit(self):
-	self.autosave()
+#	self.autosave()
 	qApp.quit()
+
+    def closeEvent(self, event):
+	self.autosave()
+	self.saveSettings()
+	event.accept()
 
     def clearSearch(self):
 	self.searchEdit.clear()
@@ -182,10 +189,10 @@ class MainWindow(QMainWindow):
 	    
     def showAboutBox(self):
         QMessageBox.about(self, "About",
-                          "<h2>Coffee Notes</h2>" +
+                          "<h2>%s</h2>" +
                           """<h4>Version &laquo;%s&raquo; %s</h4>
 <p>&copy; Dmitri Brechalov, 2011</p>
-<p>Quick crossplatform notepad inspired by Notational Velocity</p>""" % (CODE_NAME, VERSION))
+<p>Quick crossplatform notepad inspired by Notational Velocity</p>""" % (PROG_NAME, CODE_NAME, VERSION))
 
 
     def changeSplitterOrientation(self):
@@ -196,3 +203,14 @@ class MainWindow(QMainWindow):
 	    orientation = Qt.Horizontal
 	self.splitter.setOrientation(orientation)
 
+    def saveSettings(self):
+	settings = QSettings("dmych", PROG_NAME)
+	settings.setValue("geometry", self.saveGeometry())
+	settings.setValue("state", self.saveState())
+	settings.setValue("splitter", self.splitter.saveState())
+
+    def restoreSettings(self):
+	settings = QSettings("dmych", PROG_NAME)
+	self.restoreGeometry(settings.value("geometry").toByteArray())
+	self.restoreState(settings.value("state").toByteArray())
+	self.splitter.restoreState(settings.value("splitter").toByteArray())
