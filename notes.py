@@ -4,7 +4,7 @@
 
 import os
 import time
-from PyQt4.QtCore import *
+from PyQt4.QtCore import QObject, QFileSystemWatcher, pyqtSignal, SIGNAL
 
 class Notes(QObject):
     '''General notes DB storing contents in regular text files.
@@ -39,6 +39,12 @@ class Notes(QObject):
 	    return 1
 	return 0
 
+    def _getTitle(self, fname):
+	try:
+	    return open(fname, 'r').readline().strip().decode('utf-8')
+	except IOError:
+	    return ''
+
     def readDir(self):
 	self._db = dict()	# dict indexed by filenames
 	for fn in os.listdir(self.path):
@@ -46,7 +52,7 @@ class Notes(QObject):
 	    if ext.lower() != '.txt':
 		continue
 	    fullpath = os.path.join(self.path, fn)
-	    title = name.decode('utf-8')
+	    title = self._getTitle(fullpath)
 	    self._db[title] = {
 		'title': title,
 		'filename': fullpath,
@@ -68,13 +74,55 @@ class Notes(QObject):
 	return self.filter is None or key.find(self.filter) > -1
 
     def __getitem__(self, key):
-	'''Return recored for the given title
+	'''Return record for the given title
 	or None if not found
 	'''
 	if self._db.has_key(key):
 	    return self._db[key]
 	else:
 	    return None
+
+    def readNote(self, key):
+	note = self.__getitem__(key)
+	if note is None:
+	    return ''
+	try:
+	    return open(note['filename'], 'r').read().decode('utf-8')
+	except IOError:
+	    return ''
+
+    def _sanitize(self, txt):
+	'''Replace all "dangerous" characters (such as <>|\/")
+	'''
+	for c in '<>/\|"\'?*:':
+	    txt = txt.replace(c, '%' + hex(ord(c))[2:])
+	return txt
+
+    def saveNote(self, key, text):
+	'''Save the note (rename file and change title if necesary)
+	Return new title
+	'''
+	note = self.__getitem__(key)
+	title = text.split('\n')[0].strip()
+	print '^' * 20
+	print 'OLD TITLE:', key
+	print 'NEW TITLE:', title
+	if note is None:
+	    note = {
+		'title': title,
+		'filename': os.path.join(self.path, self._sanitize(title)) + '.txt'
+		}
+	    print 'NEW NOTE!'
+	elif key != title:
+	    newname = os.path.join(self.path, self._sanitize(title)) + '.txt'
+	    os.rename(note['filename'], newname)
+	    print 'RENAME:', note['filename']
+	    print 'TO:    ', newname
+	    note['filename'] = newname
+	print 'SAVING TO:', note['filename']
+	open(note['filename'], 'w').write(text.encode('utf-8'))
+	print '^' * 20
+	return title
 
 if __name__ == '__main__':
     #### testing

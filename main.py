@@ -8,7 +8,7 @@ from utils import *
 from notes import Notes
 
 PROG_NAME = 'Coffee Notes'
-VERSION = '0.5'
+VERSION = '0.6'
 CODE_NAME = 'Espresso'
 
 class CallbackThread(QThread):
@@ -177,23 +177,14 @@ class MainWindow(QMainWindow):
 	return note['filename']
 
     def _readText(self):
-	fname = self.getFileName()
-	if fname is None:
-	    return ''
-	try:
-	    return open(fname, 'r').read().decode('utf-8')
-	except IOError:
-	    return ''
+	return self.notes.readNote(self.title)
 
     def _saveText(self, text):
-	fname = self.getFileName()
-	if fname is None:
-	    return
-	try:
-	    open(fname, 'w').write(unicode(text).encode('utf-8'))
-	except IOError:
-	    print 'ERROR WRITING FILE:', self.fileName
-	    
+	self.title = self.notes.saveNote(self.title, unicode(text))
+	self.searchEdit.setText(self.title)
+	self.filterNotes('')
+	self.notes.indexChanged.emit()
+	
     def showAboutBox(self):
         QMessageBox.about(self, "About",
                           """<h2>%s</h2>
