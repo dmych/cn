@@ -1,0 +1,3 @@
+#!/bin/bash
+# -*- mode: bash; -*-
+rm -rf /opt/cn

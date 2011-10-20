@@ -1,0 +1,8 @@
+Package: coffee-notes
+Version: 1.0
+Section: misc
+Architecture: all
+Priority: optional
+Depends: python (>= 2.6), python-qt4 (>=4.7)
+Maintainer: Dmitri Brechalov <dbrechalov@gmail.com>
+Description: Simple note-taking application inspired by Notational Velocity

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Exec=cn
+Icon=cn
+Terminal=false
+Categories=Utility;TextEditor;Qt
+Name=Coffee Notes
