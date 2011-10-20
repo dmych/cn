@@ -71,7 +71,7 @@ class Notes(QObject):
 	self.filter = filter
 
     def _matchedFilter(self, key):
-	return self.filter is None or key.find(self.filter) > -1
+	return self.filter is None or self.readNote(key).find(self.filter) > -1
 
     def __getitem__(self, key):
 	'''Return record for the given title
