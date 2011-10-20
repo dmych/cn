@@ -8,7 +8,7 @@ from utils import *
 from notes import Notes
 
 PROG_NAME = 'Coffee Notes'
-VERSION = '0.7'
+VERSION = '1.0'
 CODE_NAME = 'Espresso'
 
 class CallbackThread(QThread):
