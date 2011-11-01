@@ -8,8 +8,8 @@ from utils import *
 from notes import Notes
 
 PROG_NAME = 'Coffee Notes'
-VERSION = '1.0'
-CODE_NAME = 'Espresso'
+VERSION = '1.1'
+CODE_NAME = 'Americano'
 
 class CallbackThread(QThread):
     '''Execute callback once at 5 secs
@@ -24,6 +24,7 @@ class CallbackThread(QThread):
 	    self.sleep(self.sec)
 
 class MainWindow(QMainWindow):
+    indexChanged = pyqtSignal()
     def __init__(self, parent=None):
 	QMainWindow.__init__(self)
 	self._ppath = getProgramPath()
@@ -34,26 +35,31 @@ class MainWindow(QMainWindow):
 		     self.close)
 	self.connect(self.action_About, SIGNAL("triggered()"),
 		     self.showAboutBox)
-	self.workDir = os.path.expanduser(self.config.readStr('WorkDir', '~/CoffeeNotes'))
-	self.notes = Notes(self.workDir)
-	self.title = ''
-	self.search = ''
+	self.dbname = os.path.expanduser(self.config.readStr('Location', '~/Coffee Notes'))
+	self.notes = Notes(self.dbname)
+	self.currentKey = None
 	self.changed = None
 	self.saving = False
-	self.model = QStringListModel(self.notes.index())
+	#### notes list behaviour
+	self.model = QStringListModel() # !!
 	self.noteList.setModel(self.model)
 	self.noteList.setSelectionBehavior(QAbstractItemView.SelectRows)
 	self.connect(self.noteList, SIGNAL("activated(const QModelIndex&)"), self.selectNote)
 	self.connect(self.noteList, SIGNAL("clicked(const QModelIndex&)"), self.selectNote)
-	self.connect(self.notes, SIGNAL("indexChanged()"), self.reloadIndex)
+	self.filterNotes()
+	self.connect(self, SIGNAL("indexChanged()"), self.selectCurrent)
+	#### text editor & tag bar
 	self.connect(self.noteEditor, SIGNAL("textChanged()"), self.textChanged)
-	self.connect(self.searchEdit, SIGNAL("textChanged(const QString&)"),
+	self.connect(self.tagBar, SIGNAL("textChanged(const QString&)"), self.textChanged)
+	#### search box
+	self.connect(self.searchBar, SIGNAL("textChanged(const QString&)"),
 		     self.filterNotes)
+	self.connect(self.searchBar, SIGNAL("returnPressed ()"), self.enterPressed)
+	#### autosave
 	self.autosaveThread = CallbackThread(self.autosave, self.config.readInt('Autosave', 5))
 	self.autosaveThread.start(QThread.NormalPriority)
 
 	#### stantard shortcuts
-	self.connect(self.searchEdit, SIGNAL("returnPressed ()"), self.openNote)
 	shCL = QShortcut(QKeySequence("Ctrl+L"), self)
 	shCL.connect(shCL, SIGNAL("activated()"), self.toggleFocus)
 	shEsc = QShortcut(QKeySequence("Esc"), self)
@@ -62,6 +68,8 @@ class MainWindow(QMainWindow):
 	shCDel.connect(shCDel, SIGNAL("activated()"), self.deleteNote)
 	shCO = QShortcut(QKeySequence("Ctrl+O"), self)
 	shCO.connect(shCO, SIGNAL("activated()"), self.changeSplitterOrientation)
+	shCS = QShortcut(QKeySequence("Ctrl+S"), self)
+	shCS.connect(shCS, SIGNAL('activated()'), self.autosave)
 
 	self.setup()
 
@@ -83,7 +91,7 @@ class MainWindow(QMainWindow):
 	except:
 	    es = self.noteList.font().pointSize()
 	self.noteList.setFont(QFont(lf, ls))
-	self.searchEdit.setFont(QFont(lf, ls))
+	self.searchBar.setFont(QFont(lf, ls))
 	self.noteEditor.setCurrentFont(QFont(ef, es))
 	self.restoreSettings()
 
@@ -97,93 +105,89 @@ class MainWindow(QMainWindow):
 	event.accept()
 
     def clearSearch(self):
-	self.searchEdit.clear()
-	self.searchEdit.setFocus()
+	self.searchBar.clear()
+	self.searchBar.setFocus()
 
     def toggleFocus(self):
-	if self.searchEdit.hasFocus():
+	if self.searchBar.hasFocus():
 	    self.noteEditor.setFocus()
 	else:
-	    self.searchEdit.setFocus()
+	    self.searchBar.setFocus()
 
-    def reloadIndex(self):
-	print 'RELOADING INDEX...'
-	idx = self.notes.index()
-	try:
-	    selected = idx.index(self.title)
-	except ValueError:
-	    selected = None
-	self.model.setStringList(idx)
-	if selected is not None:
-	    print 'SELECTED:', selected
-	    i = self.model.index(selected, 0)
-	    self.noteList.setCurrentIndex(i)
-
-    def textChanged(self):
+    def textChanged(self, text=None):
 	self.changed = True
 
-    def filterNotes(self, text):
+    def filterNotes(self, text=''):
 	print 'FIND:', unicode(text)
 	self.notes.setFilter(unicode(text))
-	self.reloadIndex()
+	self.reindex()
+
+    def reindex(self):
+	print 'reindex'
+	self.notes.rescanDir()
+	self.titles, self.keys = self.notes.list()
+	self.model.setStringList(self.titles)
+	self.indexChanged.emit()
+	print '/reindex'
+
+    def selectCurrent(self):
+	print 'selectCurrent'
+	try:
+#	    print '--- 1'
+	    cur = self.keys.index(self.currentKey)
+#	    print '--- 2'
+	    self.noteList.setCurrentIndex(self.model.index(cur))
+#	    print '--- 3'
+	except ValueError:
+	    pass
+#	    print '--- !!'
+	print '/selectCurrent'
 
     def autosave(self):
 	if self.saving:
 	    return
+	print 'AUTOSAVE...'
 	self.saving = True
-	if self.title and self.changed:
+	if self.changed:
 	    print 'SAVING...'
-	    self._saveText(self.noteEditor.toPlainText())
+	    self.saveText()
 	    self.changed = False
 	self.saving = False
 
-    def openNote(self):
-	print 'openNote'
+    def openNote(self, key=None):
+	print 'openNote', key
 	self.autosave()
-	self.title = unicode(self.searchEdit.text())
-	print 'TITLE:', self.title
-	self.noteEditor.setPlainText(self._readText())
-	self.filterNotes('')
-	self.noteEditor.setFocus()
+	self.currentKey = key
+	self.noteEditor.setPlainText(self.notes.getContent(self.currentKey))
+	self.tagBar.setText(self.notes.getTags(self.currentKey))
 	self.changed = False
-	#self.notes.indexChanged.emit()
+	self.noteEditor.setFocus()
+	self.selectCurrent()
+	print '/openNote'
+
+    def enterPressed(self):
+	self.noteList.setFocus()
 
     def selectNote(self):
+	print 'selectNote'
 	sel = self.noteList.selectedIndexes()
 	if sel:
 	    item = sel[0]
-	    title = unicode(self.model.stringList()[item.row()])
-	    print 'SELECTED:', item.row(), ':', title
-	    self.searchEdit.setText(title)
-	    self.openNote()
+	    title = self.titles[item.row()]
+	    key = self.keys[item.row()]
+	    print 'SELECTED:', item.row(), ':', title, key
+	    # self.searchBar.setText(title)
+	    self.openNote(key)
+	print '/selectNote'
 
     def deleteNote(self):
-	fname = self.getFileName()
-	if fname is not None:
-	    print "DELETING", fname
-	    os.unlink(fname)
-	    self.noteEditor.setPlainText('')
-	    self.title = None
-	    self.changed = None
-	    self.saving = False
-	    self.searchEdit.clear()
+	pass
 
-    def getFileName(self):
-	if not self.title:
-	    return None
-	note = self.notes[self.title]
-	if note is None:
-	    return os.path.join(self.workDir, self.title + '.txt')
-	return note['filename']
-
-    def _readText(self):
-	return self.notes.readNote(self.title)
-
-    def _saveText(self, text):
-	self.title = self.notes.saveNote(self.title, unicode(text))
-	self.searchEdit.setText(self.title)
-	self.filterNotes('')
-	self.notes.indexChanged.emit()
+    def saveText(self):
+	print 'saveText'
+	self.notes.saveNote(self.currentKey, unicode(self.noteEditor.toPlainText()), unicode(self.tagBar.text()))
+	self.reindex()
+	print '/saveText'
 	
     def showAboutBox(self):
         QMessageBox.about(self, "About",

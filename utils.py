@@ -91,4 +91,11 @@ class SimpleConfig:
     def writeBool(self, key, value):
         self.writeStr(key, int(value))
 
+def sanitize(txt):
+    '''Replace all "dangerous" characters (such as <>|\/")
+    '''
+    for c in '<>/\|"\'?*:;~':
+	txt = txt.replace(c, '-')
+    return txt
+
 # end of utils.py
