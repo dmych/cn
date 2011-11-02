@@ -1,5 +1,5 @@
 Package: coffee-notes
-Version: 1.0
+Version: %VER%
 Section: misc
 Architecture: all
 Priority: optional

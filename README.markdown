@@ -10,11 +10,18 @@ Coffee Notes
 
 Initial release was sketched by me while I was drinking coffee in the coffee house. :)
 
-### Requirements
+### User Guide
+
+#### Requirements
 
 This app is written in **Python 2.6** and uses **PyQt4**.
 
-### User Guide
+#### Installation
+
+1. Go to [Downloads](https://github.com/dmych/cn/downloads) to download **deb**-package; then as usual, `sudo dpkg --install <deb-name>`; *Coffee Notes* should appear in *Accesories* section of the main menu.
+2. Click [Zip](https://github.com/dmych/cn/zipball/master) button to download source code as zip-archive; unpack it to any directory and launch `cn.py`.
+
+#### Using Coffee Notes
 
 Run **Coffee Notes** and start typing your note — it will be saved automatically (first line become the note's title).
 
