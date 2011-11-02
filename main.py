@@ -8,8 +8,8 @@ from utils import *
 from notes import Notes
 
 PROG_NAME = 'Coffee Notes'
-VERSION = '1.1'
-CODE_NAME = 'Americano'
+VERSION = '2.0'
+CODE_NAME = 'Espresso'
 
 class CallbackThread(QThread):
     '''Execute callback once at 5 secs
@@ -35,11 +35,12 @@ class MainWindow(QMainWindow):
 		     self.close)
 	self.connect(self.action_About, SIGNAL("triggered()"),
 		     self.showAboutBox)
-	self.dbname = os.path.expanduser(self.config.readStr('Location', '~/Coffee Notes'))
+	self.dbname = os.path.expanduser(self.config.readStr('WorkDir', '~/Coffee Notes'))
 	self.notes = Notes(self.dbname)
-	self.currentKey = None
-	self.changed = None
 	self.saving = False
+	self.currentKey = None
+	self.changed = False
+	self.newNote()
 	#### notes list behaviour
 	self.model = QStringListModel() # !!
 	self.noteList.setModel(self.model)
@@ -51,21 +52,27 @@ class MainWindow(QMainWindow):
 	#### text editor & tag bar
 	self.connect(self.noteEditor, SIGNAL("textChanged()"), self.textChanged)
 	self.connect(self.tagBar, SIGNAL("textChanged(const QString&)"), self.textChanged)
+	self.connect(self.deleteButton, SIGNAL("clicked()"), self.deleteNote)
 	#### search box
 	self.connect(self.searchBar, SIGNAL("textChanged(const QString&)"),
 		     self.filterNotes)
 	self.connect(self.searchBar, SIGNAL("returnPressed ()"), self.enterPressed)
+	self.connect(self.addButton, SIGNAL("clicked()"), self.newNote)
 	#### autosave
-	self.autosaveThread = CallbackThread(self.autosave, self.config.readInt('Autosave', 5))
-	self.autosaveThread.start(QThread.NormalPriority)
+	sec = self.config.readInt('Autosave', 5)
+	if sec > 0:
+	    self.autosaveThread = CallbackThread(self.autosave, sec)
+	    self.autosaveThread.start(QThread.NormalPriority)
 
 	#### stantard shortcuts
 	shCL = QShortcut(QKeySequence("Ctrl+L"), self)
 	shCL.connect(shCL, SIGNAL("activated()"), self.toggleFocus)
 	shEsc = QShortcut(QKeySequence("Esc"), self)
 	shEsc.connect(shEsc, SIGNAL("activated()"), self.clearSearch)
-	shCDel = QShortcut(QKeySequence("Ctrl+Delete"), self)
-	shCDel.connect(shCDel, SIGNAL("activated()"), self.deleteNote)
+	shCN = QShortcut(QKeySequence("Ctrl+N"), self)
+	shCN.connect(shCN, SIGNAL("activated()"), self.newNote)
+	shCD = QShortcut(QKeySequence("Ctrl+D"), self)
+	shCD.connect(shCD, SIGNAL("activated()"), self.deleteNote)
 	shCO = QShortcut(QKeySequence("Ctrl+O"), self)
 	shCO.connect(shCO, SIGNAL("activated()"), self.changeSplitterOrientation)
 	shCS = QShortcut(QKeySequence("Ctrl+S"), self)
@@ -154,6 +161,14 @@ class MainWindow(QMainWindow):
 	    self.changed = False
 	self.saving = False
 
+    def newNote(self):
+	self.autosave()
+	self.noteEditor.clear()
+	self.tagBar.clear()
+	self.currentKey = None
+	self.changed = False
+	self.noteEditor.setFocus()
+
     def openNote(self, key=None):
 	print 'openNote', key
 	self.autosave()
@@ -181,11 +196,21 @@ class MainWindow(QMainWindow):
 	print '/selectNote'
 
     def deleteNote(self):
-	pass
+	if self.currentKey is None:
+	    return
+	ans = QMessageBox.question(self, "Delete", "Delete \"%s\"?" % self.notes.getTitle(self.currentKey), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+	if ans != QMessageBox.Yes:
+	    return
+	self.notes.deleteNote(self.currentKey)
+	self.noteEditor.clear()
+	self.tagBar.clear()
+	self.currentKey = None
+	self.changed = False
+	self.reindex()
 
     def saveText(self):
 	print 'saveText'
-	self.notes.saveNote(self.currentKey, unicode(self.noteEditor.toPlainText()), unicode(self.tagBar.text()))
+	self.currentKey = self.notes.saveNote(self.currentKey, unicode(self.noteEditor.toPlainText()), unicode(self.tagBar.text()))
 	self.reindex()
 	print '/saveText'
 	
@@ -194,7 +219,18 @@ class MainWindow(QMainWindow):
                           """<h2>%s</h2>
 <h4>Version &laquo;%s&raquo; %s</h4>
 <p>&copy; Dmitri Brechalov, 2011</p>
-<p>Quick crossplatform notepad inspired by Notational Velocity</p>""" % (PROG_NAME, CODE_NAME, VERSION))
+<p>Crossplatform note-taking application inspired by Notational Velocity</p>
+<p><small>This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.<br/>
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.<br/>
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.
+""" % (PROG_NAME, CODE_NAME, VERSION))
 
 
     def changeSplitterOrientation(self):

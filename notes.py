@@ -28,12 +28,12 @@ class Notes(object):
 	self.filter = ''
 	self.rescanDir()
 
-    def _filepath(self, key):
-	return os.path.join(self.path, self._db[key]['filename'])
+    def _filepath(self, rec):
+	return os.path.join(self.path, rec['filename'])
 
-    def _getTitle(self, key):
+    def getTitle(self, key):
 	try:
-	    return open(self._filepath(key), 'r').readline().strip().decode('utf-8')
+	    return open(self._filepath(self._db[key]), 'r').readline().strip().decode('utf-8')
 	except IOError:
 	    return ''
 
@@ -44,27 +44,37 @@ class Notes(object):
 	else:
 	    dbrec = rec
 	self._db[rec['key']] = dbrec
+	self._db.sync()
 
-    def _addMeta(self, fn):
-	fullpath = os.path.join(self.path, fn)
-	if not os.path.isfile(fullpath) or fullpath.startswith('.') or not fullpath.endswith('.txt'):
-	    return		# skip dirs and other non-file entries
-	md = os.path.getmtime(fullpath)
+    def _newRecord(self):
+	md = time.time()
 	key = KEY_PREFFIX + str(md)
 	rec = {
 	    'key': key,
-	    'filename': fn,
 	    'deleted': 0,
 	    'modifydate': md,
 	    'createdate': md,
 	    'tags': list(),
 	    'CHANGED': True,
 	    }
-	dbg('*** %s added as %s' % (fn, key))
+	dbg('*** New note %s' % (key))
+	self._updateRecord(rec)
+	return rec
+
+    def _addMeta(self, fn):
+	fullpath = os.path.join(self.path, fn)
+	if not os.path.isfile(fullpath) or fullpath.startswith('.') or not fullpath.endswith('.txt'):
+	    return		# skip dirs and other non-file entries
+	md = os.path.getmtime(fullpath)
+	rec = self._newRecord()
+	rec['filename'] = fn
+	rec['modifydate'] = md
+	rec['createdate'] = md
+	dbg('*** %s added as %s' % (fn, rec['key']))
 	self._updateRecord(rec)
 
     def _updateMeta(self, rec):
-	fullpath = self._filepath(rec['key'])
+	fullpath = self._filepath(rec)
 	md = os.path.getmtime(fullpath)
 	if rec['modifydate'] != md:
 	    rec['modifydate'] = md
@@ -126,12 +136,12 @@ class Notes(object):
 	where key_list contains keys (filenames) of each note
 	'''
 	r2 = self.index()
-	r1 = [ self._getTitle(key) for key in r2 ]
+	r1 = [ self.getTitle(key) for key in r2 ]
 	return r1, r2
 
     def getContent(self, key):
     	try:
-    	    return open(self._filepath(key), 'r').read().decode('utf-8')
+    	    return open(self._filepath(self._db[key]), 'r').read().decode('utf-8')
     	except IOError:
     	    return ''
 
@@ -144,10 +154,18 @@ class Notes(object):
     def _saveContent(self, filename, text):
     	'''Save the note (rename file and return new filename if necesary)
     	'''
-    	newfilename = sanitize(text.split('\n')[0].strip().encode('utf-8')) + '.txt'
 	path_fn = os.path.join(self.path, filename)
+    	basename = sanitize(text.split('\n')[0].strip().encode('utf-8'))
+	newfilename = basename + '.txt'
+	i = 1
+	while os.path.exists(os.path.join(self.path, newfilename)):
+	    newfilename = basename + '-%s' % i + '.txt'
+	    i += 1
 	path_nf = os.path.join(self.path, newfilename)
-    	if filename != newfilename and os.path.exists(path_fn):
+	if not filename:
+	    filename = newfilename
+	    path_fn = path_nf
+    	elif filename != newfilename and os.path.exists(path_fn):
     	    os.rename(path_fn, path_nf)
     	    print 'RENAME:', path_fn
     	    print 'TO:    ', path_nf
@@ -158,76 +176,33 @@ class Notes(object):
     	return filename
 
     def saveNote(self, key, text, tags):
-	rec = self._db[key]
-	if not rec.has_key('filename'):
-	    #### no filename given - use the first line of the text
-	    fn = sanitize(text.split('\n')[0].strip())
-	    if not fn:		# or key if text is empty
-		fn = key
-	    rec['filename'] = fn
-	rec['filename'] = self._saveContent(rec['filename'], text)
+	if self._db.has_key(key):
+	    rec = self._db[key]
+	else:
+	    rec = self._newRecord()
+	if rec.has_key('filename'):
+	    filename = rec['filename']
+	else:
+	    filename = ''
+	rec['filename'] = self._saveContent(filename, text)
 	#### update tags
 	tags = [ item.strip().decode('utf-8') for item in tags.split(' ') ]
 	rec['tags'] = tags
 	rec['CHANGED'] = True
 	rec['deleted'] = 0
+	self._updateMeta(rec)
+	return rec['key']
+
+    def deleteNote(self, key):
+	if not self._db.has_key(key):
+	    return		# no valid key given - just ignore
+	rec = self._db[key]
+	filename = self._filepath(rec)
+	os.unlink(filename)
+	rec['deleted'] = 1
+	rec['CHANGED'] = True
 	self._updateRecord(rec)
-
-    ########
-	
-    def __getitem__(self, key):
-	'''Return a note by the given key
-	'''
-	print('**** TODO ****')
-
-    def __setitem__(self, key, note):
-	'''Replaces a note with the given key with the given note
-	'''
-	print('**** TODO ****')
-
-    # def __getitem__(self, key):
-    # 	'''Return record for the given title
-    # 	or None if not found
-    # 	'''
-    # 	if self._db.has_key(key):
-    # 	    return self._db[key]
-    # 	else:
-    # 	    return None
-
-    # def readNote(self, key):
-    # 	note = self.__getitem__(key)
-    # 	if note is None:
-    # 	    return ''
-    # 	try:
-    # 	    return open(note['filename'], 'r').read().decode('utf-8')
-    # 	except IOError:
-    # 	    return ''
-
-    # def saveNote(self, key, text):
-    # 	'''Save the note (rename file and change title if necesary)
-    # 	Return new title
-    # 	'''
-    # 	note = self.__getitem__(key)
-    # 	title = text.split('\n')[0].strip()
-    # 	print '^' * 20
-    # 	print 'OLD TITLE:', key
-    # 	print 'NEW TITLE:', title
-    # 	if note is None:
-    # 	    note = {
-    # 		'title': title,
-    # 		'filename': os.path.join(self.path, self._sanitize(title)) + '.txt'
-    # 		}
-    # 	    print 'NEW NOTE!'
-    # 	elif key != title:
-    # 	    newname = os.path.join(self.path, self._sanitize(title)) + '.txt'
-    # 	    os.rename(note['filename'], newname)
-    # 	    print 'RENAME:', note['filename']
-    # 	    print 'TO:    ', newname
-    # 	    note['filename'] = newname
-    # 	print 'SAVING TO:', note['filename']
-    # 	open(note['filename'], 'w').write(text.encode('utf-8'))
-    # 	print '^' * 20
-    # 	return title
+	dbg('*** %s deleted' % key)
 
 if __name__ == '__main__':
     #### testing
