@@ -102,7 +102,7 @@ class Notes(object):
 	return [ key for key in self._db.keys() if self._db[key]['deleted'] == deleted and self._matchedFilter(key) ]
 
     def _matchedFilter(self, key):
-	return self.filter is None or self.getContent(key).find(self.filter) > -1
+	return not self.filter or self.getContent(key).find(self.filter) > -1
 
     def _sortcmd(self, x, y):
 	'''sort by modified date, decremental

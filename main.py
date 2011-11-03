@@ -128,14 +128,14 @@ class MainWindow(QMainWindow):
 	self.statusBar().clearMessage()
 
     def filterNotes(self, text=''):
-	log('FIND: %s' % unicode(text))
+	log('FIND: %s' % unicode(text).encode('utf-8'))
 	self.notes.setFilter(unicode(text))
 	self.reindex()
 
     def reindex(self):
 	log('reindex')
 	self.statusBar().showMessage('Scanning directory...')
-	self.notes.rescanDir()
+#	self.notes.rescanDir()
 	self.titles, self.keys = self.notes.list()
 	self.model.setStringList(self.titles)
 	self.indexChanged.emit()
