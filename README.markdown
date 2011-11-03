@@ -37,7 +37,6 @@ No need to click "Save" button! Everything you type will be saved immediately (a
 * `Ctrl+O` — toggle orientation to vertical/horizontal
 * `Ctrl+D` — delete current note (if any)
 * `Tab` — jump through search/title bar, notes list and text area
-* `Ctrl-S` — save now (actually superfluous unless you switched autosave off)
 * `Ctrl+Q` — quit
 
 #### Configuration File
@@ -51,7 +50,7 @@ Config file should be located in your home directory: `~/.cn.conf`. Here is a sa
     
 * `WorkDir` reffers to the directory where your notes are stored (`~/Coffee Notes` by default)
 * `EditFont` and `ListFont` set the font family and size for the note editor and notes list respectively
-* `Autosave` sets autosave interval in seconds (must be integer, 5 by default). You can swithc autosave off using 0 value: `Autosasve=0` (in this case you should save your notes manually)
+* `Autosave` sets autosave interval in seconds (must be integer, 5 by default).
 
 ### Syncing with Dropbox
 

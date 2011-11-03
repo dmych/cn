@@ -8,8 +8,8 @@ from utils import *
 from notes import Notes
 
 PROG_NAME = 'Coffee Notes'
-VERSION = '2.0'
-CODE_NAME = 'Espresso'
+VERSION = '11.11a'
+CODE_NAME = 'Americano'
 
 class CallbackThread(QThread):
     '''Execute callback once at 5 secs
@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
 	QMainWindow.__init__(self)
 	self._ppath = getProgramPath()
-	print self._ppath
+	log('PATH: %s' % self._ppath, True)
 	self.config = SimpleConfig('~/.cn.conf')
 	uic.loadUi(os.path.join(self._ppath, "main.ui"), self)
 	self.connect(self.action_Exit, SIGNAL("triggered()"),
@@ -60,9 +60,9 @@ class MainWindow(QMainWindow):
 	self.connect(self.addButton, SIGNAL("clicked()"), self.newNote)
 	#### autosave
 	sec = self.config.readInt('Autosave', 5)
-	if sec > 0:
-	    self.autosaveThread = CallbackThread(self.autosave, sec)
-	    self.autosaveThread.start(QThread.NormalPriority)
+	if sec <= 0: sec = 5
+	self.autosaveThread = CallbackThread(self.autosave, sec)
+	self.autosaveThread.start(QThread.NormalPriority)
 
 	#### stantard shortcuts
 	shCL = QShortcut(QKeySequence("Ctrl+L"), self)
@@ -75,8 +75,8 @@ class MainWindow(QMainWindow):
 	shCD.connect(shCD, SIGNAL("activated()"), self.deleteNote)
 	shCO = QShortcut(QKeySequence("Ctrl+O"), self)
 	shCO.connect(shCO, SIGNAL("activated()"), self.changeSplitterOrientation)
-	shCS = QShortcut(QKeySequence("Ctrl+S"), self)
-	shCS.connect(shCS, SIGNAL('activated()'), self.autosave)
+	# shCS = QShortcut(QKeySequence("Ctrl+S"), self)
+	# shCS.connect(shCS, SIGNAL('activated()'), self.startSync)
 
 	self.setup()
 
@@ -84,7 +84,7 @@ class MainWindow(QMainWindow):
 	'''set up fonts etc
 	'''
 	dft = '%s, %s' % (unicode(self.noteList.font().family()), self.noteList.font().pointSize())
-	print 'DEFAULT FONT:', dft
+	log('DEFAULT FONT: %s' % dft)
 	lf = self.config.readStr('ListFont', dft)
 	try:
 	    (lf, ls) = lf.split(',', 1)
@@ -125,38 +125,33 @@ class MainWindow(QMainWindow):
 	self.changed = True
 
     def filterNotes(self, text=''):
-	print 'FIND:', unicode(text)
+	log('FIND: %s' % unicode(text))
 	self.notes.setFilter(unicode(text))
 	self.reindex()
 
     def reindex(self):
-	print 'reindex'
+	log('reindex')
 	self.notes.rescanDir()
 	self.titles, self.keys = self.notes.list()
 	self.model.setStringList(self.titles)
 	self.indexChanged.emit()
-	print '/reindex'
+	log('/reindex')
 
     def selectCurrent(self):
-	print 'selectCurrent'
+	log('selectCurrent')
 	try:
-#	    print '--- 1'
 	    cur = self.keys.index(self.currentKey)
-#	    print '--- 2'
 	    self.noteList.setCurrentIndex(self.model.index(cur))
-#	    print '--- 3'
 	except ValueError:
 	    pass
-#	    print '--- !!'
-	print '/selectCurrent'
+	log('/selectCurrent')
 
     def autosave(self):
 	if self.saving:
 	    return
-	print 'AUTOSAVE...'
 	self.saving = True
 	if self.changed:
-	    print 'SAVING...'
+	    log('SAVING...')
 	    self.saveText()
 	    self.changed = False
 	self.saving = False
@@ -170,7 +165,7 @@ class MainWindow(QMainWindow):
 	self.noteEditor.setFocus()
 
     def openNote(self, key=None):
-	print 'openNote', key
+	log('openNote(%s)' % key)
 	self.autosave()
 	self.currentKey = key
 	self.noteEditor.setPlainText(self.notes.getContent(self.currentKey))
@@ -178,22 +173,22 @@ class MainWindow(QMainWindow):
 	self.changed = False
 	self.noteEditor.setFocus()
 	self.selectCurrent()
-	print '/openNote'
+	log('/openNote')
 
     def enterPressed(self):
 	self.noteList.setFocus()
 
     def selectNote(self):
-	print 'selectNote'
+	log('selectNote')
 	sel = self.noteList.selectedIndexes()
 	if sel:
 	    item = sel[0]
 	    title = self.titles[item.row()]
 	    key = self.keys[item.row()]
-	    print 'SELECTED:', item.row(), ':', title, key
+	    log('SELECTED: %s: %s [%s]' % (item.row(), title.encode('utf-8'), key))
 	    # self.searchBar.setText(title)
 	    self.openNote(key)
-	print '/selectNote'
+	log('/selectNote')
 
     def deleteNote(self):
 	if self.currentKey is None:
@@ -209,10 +204,10 @@ class MainWindow(QMainWindow):
 	self.reindex()
 
     def saveText(self):
-	print 'saveText'
+	log('saveText')
 	self.currentKey = self.notes.saveNote(self.currentKey, unicode(self.noteEditor.toPlainText()), unicode(self.tagBar.text()))
 	self.reindex()
-	print '/saveText'
+	log('/saveText')
 	
     def showAboutBox(self):
         QMessageBox.about(self, "About",

@@ -5,15 +5,9 @@
 import os
 import time
 import shelve
-from utils import sanitize
+from utils import sanitize, log
 
 KEY_PREFFIX = 'COFFEE_NOTES_'
-
-VERBOSE = False
-
-def dbg(msg):
-    if VERBOSE:
-	print msg
 
 class Notes(object):
     '''General notes DB storing contents in regular text files.
@@ -22,7 +16,7 @@ class Notes(object):
     def __init__(self, path, sortby='modifydate'):
 	object.__init__(self)
 	self.path = path
-	dbg('Open DB...')
+	log('Open DB...')
 	self._db = shelve.open(os.path.join(self.path, '.index.db'))
 	self.sortby = sortby
 	self.filter = ''
@@ -57,7 +51,7 @@ class Notes(object):
 	    'tags': list(),
 	    'CHANGED': True,
 	    }
-	dbg('*** New note %s' % (key))
+	log('*** New note %s' % (key))
 	self._updateRecord(rec)
 	return rec
 
@@ -70,7 +64,7 @@ class Notes(object):
 	rec['filename'] = fn
 	rec['modifydate'] = md
 	rec['createdate'] = md
-	dbg('*** %s added as %s' % (fn, rec['key']))
+	log('*** %s added as %s' % (fn, rec['key']))
 	self._updateRecord(rec)
 
     def _updateMeta(self, rec):
@@ -81,11 +75,11 @@ class Notes(object):
 	    rec['CHANGED'] = True
 	    rec['deleted'] = 0
 	    self._updateRecord(rec)
-	    dbg('*** %s (key: %s) changed' % (rec['filename'], rec['key']))
+	    log('*** %s (key: %s) changed' % (rec['filename'], rec['key']))
 
     def rescanDir(self):
 	# dict indexed by filenames (without extensions)
-	dbg('Scanning...')
+	log('Scanning...')
 	flist = os.listdir(self.path)
 	for key in self.getKeys():
 	    rec = self._db[key]
@@ -96,7 +90,7 @@ class Notes(object):
 	    except ValueError:	# no such file - deleted
 		rec['deleted'] = 1
 		rec['CHANGED'] = True
-		dbg('*** %s deleted' % fname)
+		log('*** %s deleted' % fname)
 	    
 	    if rec.has_key('CHANGED') and rec['CHANGED']:
 		self._db[key] = rec
@@ -167,11 +161,11 @@ class Notes(object):
 	    path_fn = path_nf
     	elif filename != newfilename and os.path.exists(path_fn):
     	    os.rename(path_fn, path_nf)
-    	    print 'RENAME:', path_fn
-    	    print 'TO:    ', path_nf
+    	    log('RENAME: %s' % path_fn)
+    	    log('TO:     %s' % path_nf)
     	    filename = newfilename
 	    path_fn = path_nf
-    	print 'SAVING TO:', filename
+    	log('SAVING TO: %s' % filename)
     	open(path_fn, 'w').write(text.encode('utf-8'))
     	return filename
 
@@ -202,7 +196,7 @@ class Notes(object):
 	rec['deleted'] = 1
 	rec['CHANGED'] = True
 	self._updateRecord(rec)
-	dbg('*** %s deleted' % key)
+	log('*** %s deleted' % key)
 
 if __name__ == '__main__':
     #### testing

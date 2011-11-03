@@ -1,5 +1,14 @@
 # utils.py
 
+LOGNAME = '/tmp/cn.log'
+def log(msg, restart=False):
+    if restart:
+	f = open(LOGNAME, 'w')
+    else:
+	f = open(LOGNAME, 'a')
+    f.write('%s\n' % msg)
+    f.close()
+
 def getProgramPath():
     import sys
     import os.path
@@ -24,7 +33,7 @@ class SimpleConfig:
         try:
             f = openConfig(self.fileName, 'r')
         except:
-	    print 'CANNOT FIND', self.fileName
+	    log('CANNOT FIND %s' % self.fileName)
             return
         for line in f.readlines():
             line = line.strip()
@@ -36,8 +45,8 @@ class SimpleConfig:
             except:
                 pass
         f.close()
-	print 'CONFIG'
-	print self.data
+	log('CONFIG')
+	log(repr(self.data))
 
     def save(self):
         f = openConfig(self.fileName, 'w')
