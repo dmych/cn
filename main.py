@@ -25,6 +25,7 @@ class CallbackThread(QThread):
 
 class MainWindow(QMainWindow):
     indexChanged = pyqtSignal()
+    saveRequested = pyqtSignal()
     def __init__(self, parent=None):
 	QMainWindow.__init__(self)
 	self._ppath = getProgramPath()
@@ -59,10 +60,11 @@ class MainWindow(QMainWindow):
 	self.connect(self.searchBar, SIGNAL("returnPressed ()"), self.enterPressed)
 	self.connect(self.addButton, SIGNAL("clicked()"), self.newNote)
 	#### autosave
+	self.connect(self, SIGNAL('saveRequested()'), self.saveText)
 	sec = self.config.readInt('Autosave', 5)
 	if sec <= 0: sec = 5
 	self.autosaveThread = CallbackThread(self.autosave, sec)
-	self.autosaveThread.start(QThread.NormalPriority)
+	self.autosaveThread.start(QThread.IdlePriority)
 
 	#### stantard shortcuts
 	shCL = QShortcut(QKeySequence("Ctrl+L"), self)
@@ -123,6 +125,7 @@ class MainWindow(QMainWindow):
 
     def textChanged(self, text=None):
 	self.changed = True
+	self.statusBar().clearMessage()
 
     def filterNotes(self, text=''):
 	log('FIND: %s' % unicode(text))
@@ -131,10 +134,12 @@ class MainWindow(QMainWindow):
 
     def reindex(self):
 	log('reindex')
+	self.statusBar().showMessage('Scanning directory...')
 	self.notes.rescanDir()
 	self.titles, self.keys = self.notes.list()
 	self.model.setStringList(self.titles)
 	self.indexChanged.emit()
+	self.statusBar().showMessage('%s notes' % (len(self.titles)))
 	log('/reindex')
 
     def selectCurrent(self):
@@ -147,14 +152,7 @@ class MainWindow(QMainWindow):
 	log('/selectCurrent')
 
     def autosave(self):
-	if self.saving:
-	    return
-	self.saving = True
-	if self.changed:
-	    log('SAVING...')
-	    self.saveText()
-	    self.changed = False
-	self.saving = False
+	self.saveRequested.emit()
 
     def newNote(self):
 	self.autosave()
@@ -163,6 +161,7 @@ class MainWindow(QMainWindow):
 	self.currentKey = None
 	self.changed = False
 	self.noteEditor.setFocus()
+	self.statusBar().clearMessage()
 
     def openNote(self, key=None):
 	log('openNote(%s)' % key)
@@ -173,6 +172,7 @@ class MainWindow(QMainWindow):
 	self.changed = False
 	self.noteEditor.setFocus()
 	self.selectCurrent()
+	self.statusBar().clearMessage()
 	log('/openNote')
 
     def enterPressed(self):
@@ -198,16 +198,23 @@ class MainWindow(QMainWindow):
 	    return
 	self.notes.deleteNote(self.currentKey)
 	self.noteEditor.clear()
-	self.tagBar.clear()
+#	self.tagBar.clear()
 	self.currentKey = None
 	self.changed = False
 	self.reindex()
 
     def saveText(self):
-	log('saveText')
-	self.currentKey = self.notes.saveNote(self.currentKey, unicode(self.noteEditor.toPlainText()), unicode(self.tagBar.text()))
-	self.reindex()
-	log('/saveText')
+	if self.saving:
+	    return
+	self.saving = True
+	if self.changed:
+	    log('SAVING...')
+	    self.statusBar().showMessage('Saving...')
+	    self.currentKey = self.notes.saveNote(self.currentKey, unicode(self.noteEditor.toPlainText()), unicode(self.tagBar.text()))
+	    self.reindex()
+	    self.changed = False
+	    self.statusBar().showMessage('Saved')
+	self.saving = False
 	
     def showAboutBox(self):
         QMessageBox.about(self, "About",
