@@ -66,6 +66,16 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QToolButton" name="syncButton">
+            <property name="toolTip">
+             <string>Start sync with Simplenote (Ctrl+S)</string>
+            </property>
+            <property name="text">
+             <string>≈</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>

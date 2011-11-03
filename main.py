@@ -80,6 +80,7 @@ class MainWindow(QMainWindow):
 		     self.filterNotes)
 	self.connect(self.searchBar, SIGNAL("returnPressed ()"), self.enterPressed)
 	self.connect(self.addButton, SIGNAL("clicked()"), self.newNote)
+	self.connect(self.syncButton, SIGNAL("clicked()"), self.startSync)
 	#### autosave
 	self.connect(self, SIGNAL('saveRequested()'), self.saveText)
 	sec = self.config.readInt('Autosave', 5)
@@ -98,8 +99,8 @@ class MainWindow(QMainWindow):
 	shCD.connect(shCD, SIGNAL("activated()"), self.deleteNote)
 	shCO = QShortcut(QKeySequence("Ctrl+O"), self)
 	shCO.connect(shCO, SIGNAL("activated()"), self.changeSplitterOrientation)
-	# shCS = QShortcut(QKeySequence("Ctrl+S"), self)
-	# shCS.connect(shCS, SIGNAL('activated()'), self.startSync)
+	shCS = QShortcut(QKeySequence("Ctrl+S"), self)
+	shCS.connect(shCS, SIGNAL('activated()'), self.startSync)
 
 	self.setup()
 
@@ -275,3 +276,6 @@ along with this program.  If not, see <a href="http://www.gnu.org/licenses/">htt
 	self.restoreGeometry(settings.value("geometry").toByteArray())
 	self.restoreState(settings.value("state").toByteArray())
 	self.splitter.restoreState(settings.value("splitter").toByteArray())
+
+    def startSync(self):
+	self.statusBar().showMessage('Sync started...')
