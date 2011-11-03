@@ -1,3 +1,4 @@
 #!/bin/bash
 # -*- mode: bash; -*-
 rm -rf /opt/cn/*.pyc
+rm -f /tmp/cn.log

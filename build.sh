@@ -13,7 +13,7 @@ mkdir -p build/usr/share/pixmaps
 cp -v README.markdown icon.png *.py *.ui build/opt/cn
 sed -e "s/%VER%/${VERSION}/g" control >build/DEBIAN/control
 cp -v postinst build/DEBIAN
-cp -v postrm build/DEBIAN
+cp -v prerm build/DEBIAN
 cp -v cn.desktop build/usr/share/applications
 cp -v icon.png build/usr/share/pixmaps/cn.png
 cd build/usr/local/bin
@@ -21,4 +21,4 @@ ln -sv ../../../opt/cn/cn.py cn
 cd $PROG_DIR
 pwd
 dpkg -b ./build $PKG_NAME
-#rm -rf build
+rm -rf build
