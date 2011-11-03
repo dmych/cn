@@ -63,3 +63,7 @@ Insead, you can create symlink: `ln -s ~/Dropbox/path/to/your/notes ~/Coffee\ No
 ### Syncing with Simplenote
 
 Planned in the nearest future releases. See Issue #9.
+
+### Versioning
+
+Major releases of *Coffee Notes* have names: Espresso, Americano, Cappiccino etc. Each version of the named major release has version in format Year.Month (such as 11.10) with optional letter ("a" for the "alpha" release, or "b" for "beta" release).
