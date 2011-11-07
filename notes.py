@@ -24,7 +24,7 @@ import time
 import shelve
 from utils import sanitize, log
 
-KEY_PREFFIX = 'COFFEE_NOTES_'
+KEY_PREFIX = 'COFFEE_NOTES_'
 
 class Notes(object):
     '''General notes DB storing contents in regular text files.
@@ -42,11 +42,15 @@ class Notes(object):
     def _filepath(self, rec):
 	return os.path.join(self.path, rec['filename'])
 
-    def getTitle(self, key):
+    def getTitleF(self, fname):
 	try:
-	    return open(self._filepath(self._db[key]), 'r').readline().strip().decode('utf-8')
+	    return open(os.path.join(self.path, fname), 'r').readline().strip().decode('utf-8')
 	except IOError:
 	    return ''
+
+    def getTitle(self, key):
+	return self._db[key]['title']
+#	return self.getTitleF(self._db[key])
 
     def _updateRecord(self, rec):
 	if self._db.has_key(rec['key']):
@@ -59,9 +63,11 @@ class Notes(object):
 
     def _newRecord(self):
 	md = time.time()
-	key = KEY_PREFFIX + str(md)
+	key = KEY_PREFIX + str(md)
 	rec = {
 	    'key': key,
+	    'title': '',
+	    'filename': '',
 	    'deleted': 0,
 	    'modifydate': md,
 	    'createdate': md,
@@ -81,6 +87,7 @@ class Notes(object):
 	rec['filename'] = fn
 	rec['modifydate'] = md
 	rec['createdate'] = md
+	rec['title'] = self.getTitleF(fn)
 	log('*** %s added as %s' % (fn, rec['key']))
 	self._updateRecord(rec)
 
@@ -88,6 +95,7 @@ class Notes(object):
 	fullpath = self._filepath(rec)
 	md = os.path.getmtime(fullpath)
 	if rec['modifydate'] != md:
+	    rec['title'] = self.getTitleF(rec['filename'])
 	    rec['modifydate'] = md
 	    rec['CHANGED'] = True
 	    rec['deleted'] = 0
@@ -137,6 +145,9 @@ class Notes(object):
 	result.sort(self._sortcmd)
 	return result
 
+    def values(self):
+	return self._db.values()
+
     #### Top level interface
 
     def setFilter(self, filter=''):
@@ -162,40 +173,38 @@ class Notes(object):
             return ' '.join([ tag.encode('utf-8') for tag in rec['tags']])
 	return ''
 
-    def _saveContent(self, filename, text):
+    def _saveContent(self, rec, text):
     	'''Save the note (rename file and return new filename if necesary)
     	'''
-	path_fn = os.path.join(self.path, filename)
-    	basename = sanitize(text.split('\n')[0].strip().encode('utf-8'))
+	filename = self._filepath(rec)
+    	log('SAVING TO: %s' % filename)
+    	open(filename, 'w').write(text.encode('utf-8'))
+
+    def _renameNote(self, rec, first_line):
+    	basename = sanitize(first_line)
 	newfilename = basename + '.txt'
 	i = 1
 	while os.path.exists(os.path.join(self.path, newfilename)):
 	    newfilename = basename + '-%s' % i + '.txt'
 	    i += 1
-	path_nf = os.path.join(self.path, newfilename)
-	if not filename:
-	    filename = newfilename
-	    path_fn = path_nf
-    	elif filename != newfilename and os.path.exists(path_fn):
-    	    os.rename(path_fn, path_nf)
-    	    log('RENAME: %s' % path_fn)
-    	    log('TO:     %s' % path_nf)
-    	    filename = newfilename
-	    path_fn = path_nf
-    	log('SAVING TO: %s' % filename)
-    	open(path_fn, 'w').write(text.encode('utf-8'))
-    	return filename
+	npath = os.path.join(self.path, newfilename)
+	opath = self._filepath(rec)
+	if rec['filename'] and os.path.exists(opath):
+	    log('RENAME %s TO %s' % (opath, npath))
+	    os.rename(opath, npath)
+	log('NEW FILENAME: %s' % newfilename)
+	return newfilename
 
     def saveNote(self, key, text, tags):
 	if self._db.has_key(key):
 	    rec = self._db[key]
 	else:
 	    rec = self._newRecord()
-	if rec.has_key('filename'):
-	    filename = rec['filename']
-	else:
-	    filename = ''
-	rec['filename'] = self._saveContent(filename, text)
+	title = text.split('\n')[0].strip().encode('utf-8')
+	if title != rec['title']:
+	    rec['filename'] = self._renameNote(rec, title)
+	    rec['title'] = title
+	self._saveContent(rec, text)
 	#### update tags
 	tags = [ item.strip().decode('utf-8') for item in tags.split(' ') ]
 	rec['tags'] = tags

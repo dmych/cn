@@ -28,20 +28,22 @@ VERBOSE_DEBUG = True
 
 def dbg(msg):
     if not VERBOSE_DEBUG: return
-    from utils import log
-    log('**** %s\n' % (msg))
+    from sys import stderr
+    stderr.write('**** %s\n' % (msg))
+
+from utils import log
 
 def sync(localdb, user, password, since=None):
     db = Notes(localdb)
     api = Simplenote(user, password)
-    dbg('LOCAL TO REMOTE:')
+    log('LOCAL TO REMOTE:')
     synced_count = 0
     for note in db.values():
 	if note['CHANGED']:
 	    if not note.has_key('key') or note['key'].startswith(KEY_PREFIX):
-		dbg('NEW NOTE')
+		log('NEW NOTE')
 	    else:
-		dbg('CHANGED: %s' % note['key'])
+		log('CHANGED: %s' % note['key'])
 	    if note['key'].startswith(KEY_PREFIX):
 		k = note['key']
 		del note['key']
@@ -55,35 +57,35 @@ def sync(localdb, user, password, since=None):
 	    synced_count += 1
     if since:
 	rindex = api.index(since=since)
-	dbg('>>>> SINCE: %s' % since)
+	log('>>>> SINCE: %s' % since)
     else:
 	rindex = api.index()
-    dbg('REMOTE TO LOCAL:')
-    dbg('>>>> RINDEX LEN: %s' % len(rindex))
+    log('REMOTE TO LOCAL:')
+    log('>>>> RINDEX LEN: %s' % len(rindex))
     for ritem in rindex:
 	key = ritem['key']
 	if key not in db.keys(deleted=True):
-	    dbg('  NEW: %s' % (key))
+	    log('  NEW: %s' % (key))
 	    db.update(api.get(key))
 	    synced_count += 1
 	litem = db.get(key)
 	if ritem['syncnum'] > litem['syncnum']:
-	    dbg('  UPD: %s' % (key))
+	    log('  UPD: %s' % (key))
 	    db.update(api.get(key))
 	    synced_count += 1
-    dbg('CLEAN UP:')
+    log('CLEAN UP:')
     if since is None:
 	rkeys = api.keys().keys()
 	for k in db.keys(deleted=True):
 	    if k not in rkeys:
-		dbg('  DEL: %s' % k)
+		log('  DEL: %s' % k)
 		db.remove(k)
 		synced_count += 1
     else:
 	for k in db.keys(deleted=True):
 	    litem = db.get(k)
 	    if litem['deleted'] != 0:
-		dbg('  DEL: %s' % k)
+		log('  DEL: %s' % k)
 		db.remove(k)
     sys.stderr.write('Synced %s notes.\n' % synced_count)
     return time.time()
@@ -92,4 +94,4 @@ if __name__ == '__main__':
     import sys
     email = sys.argv[1]
     password = sys.argv[2]
-    sync(email, password)
+    sync('./', email, password)
