@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This file is part of Coffee Notes project
 # 
 # Coffee Notes is a crossplatform note-taking application
@@ -17,7 +18,7 @@
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+# along with Coffee Notes.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import time
@@ -48,10 +49,27 @@ class Notes(object):
 	except IOError:
 	    return ''
 
-    def getTitle(self, key):
-	return self._db[key]['title']
+    def getTitle(self, key, ellipsis=60):
+	result = self._db[key]['title']
+	if len(result) > ellipsis:
+	    result = result[:ellipsis] + u'…'
+	return result
 #	return self.getTitleF(self._db[key])
 
+    def getModifiedFormatted(self, key):
+        sec = self._db[key]['modifydate']
+        tsec = time.gmtime(sec)
+        tnow = time.gmtime(time.time())
+        if tsec[:3] == tnow[:3]:
+            # today - return time only
+            fmt = '%H:%M'
+        elif tsec[:2] == tnow[:2]:
+            # this month - return Month, Day
+            fmt = '%b %d'
+        else:
+            fmt = '%Y-%m-%d'
+        return time.strftime(fmt, time.localtime(sec)) 
+    
     def _updateRecord(self, rec):
 	if self._db.has_key(rec['key']):
 	    dbrec = self._db[rec['key']]
@@ -124,7 +142,7 @@ class Notes(object):
 	self._db.sync()
 
     def getKeys(self, deleted=0):
-	return [ key for key in self._db.keys() if self._db[key]['deleted'] == deleted and self._matchedFilter(key) ]
+	return [ key for key in self.keys() if self._db[key]['deleted'] == deleted and self._matchedFilter(key) ]
 
     def _matchedFilter(self, key):
 	return not self.filter or self.getContent(key).find(self.filter) > -1
@@ -145,6 +163,9 @@ class Notes(object):
 	result.sort(self._sortcmd)
 	return result
 
+    def keys(self):
+	return self._db.keys()
+    
     def values(self):
 	return self._db.values()
 
@@ -158,7 +179,7 @@ class Notes(object):
 	where key_list contains keys (filenames) of each note
 	'''
 	r2 = self.index()
-	r1 = [ self.getTitle(key) for key in r2 ]
+	r1 = [ '%s\n%s' % (self.getTitle(key), self.getModifiedFormatted(key)) for key in r2 ]
 	return r1, r2
 
     def getContent(self, key):
@@ -223,6 +244,11 @@ class Notes(object):
 	rec['CHANGED'] = True
 	self._updateRecord(rec)
 	log('*** %s deleted' % key)
+
+    def update(self, rec):
+	if rec.has_key('content'):
+	    self.!saveContent(rec['content'])
+	self._updateRecord(rec)
 
 if __name__ == '__main__':
     #### testing

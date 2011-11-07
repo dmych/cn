@@ -17,7 +17,23 @@
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+# along with Coffee Notes.  If not, see <http://www.gnu.org/licenses/>.
+
+## Note format according to the API:
+## {
+##    key:        (string, note identifier, created by server),
+##    deleted:    (bool, whether or not note is in trash),
+##    modifydate: (last modified date, in seconds since epoch),
+##    createdate: (note created date, in seconds since epoch),
+##    syncnum:    (integer, number set by server, track note changes),
+##    version:    (integer, number set by server, track note content changes),
+##    minversion: (integer, number set by server, minimum version available for note),
+##    sharekey:   (string, shared note identifier),
+##    publishkey: (string, published note identifier),
+##    systemtags: [ (Array of strings, some set by server) ],
+##    tags:       [ (Array of strings) ],
+##    content:    (string, data content)
+## }
 
 import base64
 import logging
@@ -167,7 +183,10 @@ class Simplenote(object):
 	if data.has_key('key'):
 	    url += '/%s' % (data['key'])
 	url += '?' + self._getAuth()
-	edt = data.copy()
+	edt = dict()
+	for field in ('key', 'deleted', 'modifydate', 'createdate', 'syncnum', 'version', 'minversion', 'sharekey', 'systemtags', 'tags', 'content'):
+	    if data.has_key(field):
+		edt[field] = data[field]
 	cnt = edt['content']
 	for c, v in escape_table:
 	    cnt = cnt.replace(c, v)

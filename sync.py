@@ -17,7 +17,7 @@
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+# along with Coffee Notes.  If not, see <http://www.gnu.org/licenses/>.
 
 from api import Simplenote
 from notes import Notes, KEY_PREFIX
@@ -33,7 +33,22 @@ def dbg(msg):
 
 from utils import log
 
-def sync(localdb, user, password, since=None):
+def sync(dbpath, user, password):
+    notes = Notes(dbpath)
+    log('LOCAL TO REMOTE:')
+    synced_count = 0
+    for note in notes.values():
+	if note['CHANGED']:
+	    note['content'] = notes.getContent(note['key'])
+	    if note['key'].startswith(KEY_PREFIX):
+		log('NEW NOTE')
+		k = note['key']
+		del note['key']
+	    else:
+		log('CHANGED: %s' % note['key'])
+		k = None
+
+def OLD_sync(localdb, user, password, since=None):
     db = Notes(localdb)
     api = Simplenote(user, password)
     log('LOCAL TO REMOTE:')

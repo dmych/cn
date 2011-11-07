@@ -19,7 +19,7 @@
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+# along with Coffee Notes.  If not, see <http://www.gnu.org/licenses/>.
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
