@@ -152,6 +152,9 @@ class MainWindow(QMainWindow):
     def filterNotes(self, text=''):
 	log('FIND: %s' % unicode(text).encode('utf-8'))
 	self.notes.setFilter(unicode(text))
+	if text:
+	    log('%s' % type(text))
+	    self.noteList.keyboardSearch(text)
 	self.reindex()
 
     def reindex(self):
