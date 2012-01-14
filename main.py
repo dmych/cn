@@ -29,7 +29,7 @@ from utils import *
 from notes import Notes
 
 PROG_NAME = 'Coffee Notes'
-VERSION = '11.11a'
+VERSION = '12.00'
 CODE_NAME = 'Americano'
 
 class CallbackThread(QThread):
@@ -245,7 +245,7 @@ class MainWindow(QMainWindow):
         QMessageBox.about(self, "About",
                           """<h2>%s</h2>
 <h4>Version &laquo;%s&raquo; %s</h4>
-<p>&copy; Dmitri Brechalov, 2011</p>
+<p>&copy; Dmitri Brechalov, 2011-2012</p>
 <p>Crossplatform note-taking application inspired by Notational Velocity</p>
 <p><small>This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -47,6 +47,12 @@ def sync(dbpath, user, password):
 	    else:
 		log('CHANGED: %s' % note['key'])
 		k = None
+	    note = api.update(note)
+	    note['CHANGED'] = False
+	    db.update(note)
+	    if k is not None:
+		db.remove(k)
+	    synced_count += 1
 
 def OLD_sync(localdb, user, password, since=None):
     db = Notes(localdb)

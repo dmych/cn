@@ -119,10 +119,21 @@ class SimpleConfig:
     def writeBool(self, key, value):
         self.writeStr(key, int(value))
 
+def strip_hashes(txt):
+    '''Strip all hashes and spaces at the begining and the end of line
+    '''
+    while txt and txt[0] in '# \t':
+	txt = txt[1:]
+    while txt and txt[-1] in '# \t':
+	txt = txt[:-1]
+    return txt
+
 def sanitize(txt):
     '''Replace all "dangerous" characters (such as <>|\/")
+    Also strip hashes and spaces at the beginning or end of the line
     '''
-    for c in '<>/\|"\'?*:;~':
+    txt = strip_hashes(txt)
+    for c in ' \t<>/\|"\'?*:;~':
 	txt = txt.replace(c, '-')
     return txt
 

@@ -23,7 +23,7 @@
 import os
 import time
 import shelve
-from utils import sanitize, log
+from utils import strip_hashes, sanitize, log
 
 KEY_PREFIX = 'COFFEE_NOTES_'
 
@@ -45,7 +45,7 @@ class Notes(object):
 
     def getTitleF(self, fname):
 	try:
-	    return open(os.path.join(self.path, fname), 'r').readline().strip().decode('utf-8')
+	    return strip_hashes(open(os.path.join(self.path, fname), 'r').readline().strip()).decode('utf-8')
 	except IOError:
 	    return ''
 
@@ -121,7 +121,6 @@ class Notes(object):
 	    log('*** %s (key: %s) changed' % (rec['filename'], rec['key']))
 
     def rescanDir(self):
-	# dict indexed by filenames (without extensions)
 	log('Scanning...')
 	flist = os.listdir(self.path)
 	for key in self.getKeys():
@@ -202,7 +201,7 @@ class Notes(object):
     	open(filename, 'w').write(text.encode('utf-8'))
 
     def _renameNote(self, rec, first_line):
-    	basename = sanitize(first_line)
+    	basename = sanitize(first_line).lower()
 	newfilename = basename + '.txt'
 	i = 1
 	while os.path.exists(os.path.join(self.path, newfilename)):
@@ -247,7 +246,7 @@ class Notes(object):
 
     def update(self, rec):
 	if rec.has_key('content'):
-	    self.!saveContent(rec['content'])
+	    self._saveContent(rec, rec['content'])
 	self._updateRecord(rec)
 
 if __name__ == '__main__':
