@@ -29,7 +29,7 @@ from utils import *
 from notes import Notes
 
 PROG_NAME = 'Coffee Notes'
-VERSION = '12.00'
+VERSION = '12.00a'
 CODE_NAME = 'Americano'
 
 class CallbackThread(QThread):
@@ -76,6 +76,7 @@ class MainWindow(QMainWindow):
 	self.connect(self.tagBar, SIGNAL("textChanged(const QString&)"), self.textChanged)
 	self.connect(self.deleteButton, SIGNAL("clicked()"), self.deleteNote)
 	self.noteEditor.setAcceptRichText(False)
+	self.noteEditor.setTabChangesFocus(True)
 	#### search box
 	self.connect(self.searchBar, SIGNAL("textChanged(const QString&)"),
 		     self.filterNotes)
